@@ -199,7 +199,15 @@ function createObstacles(count, maxSize) {
 
 // Create balls based on user input
 function createBalls(count, radius) {
-    const colors = ['#ff0000', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#88ff00', '#0088ff', '#ff0088'];
+    const colors = [
+        // Original colors
+        '#ff0000', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#88ff00', '#0088ff', '#ff0088',
+        // Additional colors for more variety
+        '#00ff00', '#880000', '#000088', '#008800', '#888800', '#880088', '#008888', '#ff8888', '#88ff88', '#8888ff',
+        '#ffc0cb', '#dda0dd', '#e6e6fa', '#87cefa', '#7fffd4', '#98fb98', '#adff2f', '#ffd700', '#ffa500', '#ff4500',
+        '#ff6347', '#8a2be2', '#4b0082', '#9400d3', '#32cd32', '#556b2f', '#6b8e23', '#cd853f', '#bc8f8f', '#deb887',
+        '#4682b4', '#5f9ea0'
+    ];
     balls = [];
     originalBallColors = [];
 
@@ -280,12 +288,11 @@ async function saveSettings() {
     if (window.dbService) {
         try {
             await window.dbService.saveSettings(currentSettings);
-            console.log('Settings saved successfully');
         } catch (error) {
-            console.error('Failed to save settings:', error);
+            // Failed to save settings
         }
     } else {
-        console.warn('Database service not available');
+        // Database service not available
     }
 }
 
@@ -304,20 +311,18 @@ async function loadSettings() {
                     jumpForce: savedSettings.jump_force
                 };
                 updateUIWithSettings(currentSettings);
-                console.log('Settings loaded successfully:', currentSettings);
             } else {
                 // If no settings found, use defaults
                 currentSettings = { ...defaultSettings };
                 updateUIWithSettings(currentSettings);
             }
         } catch (error) {
-            console.error('Failed to load settings:', error);
             // Use defaults on error
             currentSettings = { ...defaultSettings };
             updateUIWithSettings(currentSettings);
         }
     } else {
-        console.warn('Database service not available');
+        // Database service not available
     }
 }
 
@@ -395,6 +400,9 @@ document.getElementById('startGame').addEventListener('click', async () => {
     });
     
     Composite.add(engine.world, [...newBalls, ...obstacles]);
+
+    // Log all ball colors in this round
+    console.log('Ball colors in this round:', originalBallColors);
 
     // Start the renderer but not the physics yet
     Render.run(render);
@@ -499,6 +507,23 @@ document.getElementById('startGame').addEventListener('click', async () => {
                         'Game Over - Try Again!';
                 document.getElementById('gameStatus').style.color = 
                     isWinner ? '#00ff00' : '#ffffff';
+                
+                // Log the winner data to database
+                const ballColor = ball.render.fillStyle;
+                // Add null check to prevent errors if somehow selectedBall is null
+                const selectedBallColor = selectedBall && selectedBall.render ? selectedBall.render.fillStyle : 'unknown';
+                const settings = getCurrentSettingsFromUI();
+                const winnerData = {
+                    winningBallColor: ballColor,
+                    selectedBallColor: selectedBallColor,
+                    ballCount: settings.ballCount,
+                    ballRadius: settings.ballRadius,
+                    obstacleCount: settings.obstacleCount,
+                    maxSize: settings.maxSize,
+                    movementSpeed: settings.movementSpeed,
+                    jumpForce: settings.jumpForce
+                };
+                window.dbService.logWinner(winnerData);
 
                 // Create winner label
                 const winnerLabel = document.createElement('div');
