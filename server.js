@@ -125,6 +125,112 @@ app.post('/api/settings', async (req, res) => {
   }
 });
 
+// API endpoint for logging winners
+app.post('/api/winners', async (req, res) => {
+  try {
+    console.log('[SERVER] Received POST request to /api/winners');
+    console.log('[SERVER] Request body:', req.body);
+    
+    const { 
+      sessionId, 
+      winningBallColor,
+      selectedBallColor,
+      ballCount, 
+      ballRadius, 
+      obstacleCount, 
+      maxSize, 
+      movementSpeed, 
+      jumpForce 
+    } = req.body;
+    
+    if (!sessionId || !winningBallColor) {
+      console.error('[SERVER] Missing required fields in request');
+      return res.status(400).json({ message: 'Session ID and winning ball color are required' });
+    }
+    
+    console.log('[SERVER] Preparing to save winner data with sessionId:', sessionId);
+    
+    // Create the winner data object
+    const winnerObj = {
+      session_id: sessionId,
+      winning_ball_color: winningBallColor,
+      selected_ball_color: selectedBallColor,
+      ball_count: ballCount,
+      ball_radius: ballRadius,
+      obstacle_count: obstacleCount,
+      max_size: maxSize,
+      movement_speed: movementSpeed,
+      jump_force: jumpForce,
+      created_at: new Date()
+    };
+    
+    console.log('[SERVER] Winner object to insert:', winnerObj);
+    
+    // Insert winner data
+    console.log('[SERVER] Sending insert request to Supabase...');
+    const { data, error } = await supabase
+      .from('game_winners')
+      .insert(winnerObj)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('[SERVER] Supabase error during insert:', error);
+      throw error;
+    }
+    
+    console.log('[SERVER] Winner data saved successfully:', data);
+    res.status(201).json({ message: 'Winner data saved successfully', winner: data });
+  } catch (error) {
+    console.error('[SERVER] Error saving winner data:', error);
+    console.error('[SERVER] Stack trace:', error.stack);
+    res.status(500).json({ message: 'Failed to save winner data', error: error.message });
+  }
+});
+
+// Add a specific route to serve color_preview.html
+app.get('/color-preview', (req, res) => {
+  res.sendFile(path.join(__dirname, 'color_preview.html'));
+});
+
+// API endpoint for getting color win statistics
+app.get('/api/color-stats', async (req, res) => {
+  try {
+    console.log('[SERVER] Received GET request to /api/color-stats');
+    
+    // Query the database to get all winner records
+    console.log('[SERVER] Querying Supabase for color statistics...');
+    const { data, error } = await supabase
+      .from('game_winners')
+      .select('winning_ball_color');
+    
+    if (error) {
+      console.error('[SERVER] Supabase error during color stats query:', error);
+      throw error;
+    }
+    
+    // Count wins manually since groupBy is not supported in the JS client
+    const colorStats = {};
+    if (data && data.length > 0) {
+      data.forEach(winner => {
+        const color = winner.winning_ball_color;
+        if (colorStats[color]) {
+          colorStats[color]++;
+        } else {
+          colorStats[color] = 1;
+        }
+      });
+    }
+    
+    console.log('[SERVER] Color statistics retrieved successfully:', colorStats);
+    res.json({ colorStats });
+  } catch (error) {
+    console.error('[SERVER] Error retrieving color statistics:', error);
+    console.error('[SERVER] Stack trace:', error.stack);
+    res.status(500).json({ message: 'Failed to retrieve color statistics', error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`===================================`);

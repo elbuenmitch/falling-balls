@@ -35,12 +35,14 @@
             overflow: hidden;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             transition: transform 0.3s ease;
+            position: relative;
         }
         .color-box:hover {
             transform: scale(1.05);
         }
         .color {
             flex-grow: 1;
+            position: relative;
         }
         .color-code {
             background: white;
@@ -52,7 +54,29 @@
         .original {
             border: 3px solid gold;
         }
+        .win-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            font-style: italic;
+            color: #666;
+        }
     </style>
+    <script src="db/dbService.js"></script>
 </head>
 <body>
     <h1>Falling Balls Game - Color Preview</h1>
@@ -237,5 +261,99 @@
             </div>
         </div>
     </div>
+    
+    <div id="loading" class="loading">Loading color statistics...</div>
+    
+    <script>
+        // Function to update the UI with win counts
+        async function updateColorWinCounts() {
+            // Show loading message
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                // Fetch color win statistics
+                const colorStats = await window.dbService.getColorStats();
+                
+                // Update all color boxes with their win counts
+                const colorElements = document.querySelectorAll('.color');
+                
+                colorElements.forEach(colorEl => {
+                    const colorCode = colorEl.style.backgroundColor;
+                    const colorHex = rgbToHex(colorCode);
+                    
+                    // Check if this color has any wins
+                    const winCount = colorStats[colorHex] || 0;
+                    
+                    // Only add win count display if it's greater than 0
+                    if (winCount > 0) {
+                        // Create win count element
+                        const winCountEl = document.createElement('div');
+                        winCountEl.className = 'win-count';
+                        winCountEl.textContent = winCount;
+                        colorEl.appendChild(winCountEl);
+                    }
+                });
+                
+                // Hide loading message
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error fetching color statistics:', error);
+                document.getElementById('loading').textContent = 'Error loading statistics';
+            }
+        }
+        
+        // Helper function to convert RGB to HEX
+        function rgbToHex(rgb) {
+            // If rgb is already a hex color, return it
+            if (rgb.startsWith('#')) {
+                return rgb.toLowerCase();
+            }
+            
+            // Extract rgb values
+            const rgbMatch = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+            if (!rgbMatch) return '';
+            
+            const r = parseInt(rgbMatch[1]);
+            const g = parseInt(rgbMatch[2]);
+            const b = parseInt(rgbMatch[3]);
+            
+            // Convert to hex
+            return '#' + 
+                   (r.toString(16).padStart(2, '0')) + 
+                   (g.toString(16).padStart(2, '0')) + 
+                   (b.toString(16).padStart(2, '0'));
+        }
+        
+        // Load win counts when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM content loaded');
+            // Wait a bit to ensure dbService is loaded
+            setTimeout(() => {
+                console.log('dbService available:', !!window.dbService);
+                if (window.dbService) {
+                    console.log('dbService methods:', Object.keys(window.dbService));
+                }
+                
+                if (window.dbService && window.dbService.getColorStats) {
+                    console.log('Attempting to load color statistics...');
+                    updateColorWinCounts();
+                } else {
+                    console.error('dbService or getColorStats method not available');
+                    document.getElementById('loading').textContent = 
+                        'Database service not available. Make sure the server is running and try again.';
+                }
+            }, 1000);
+        });
+        
+        // Check for script loading errors
+        const dbServiceScript = document.querySelector('script[src="db/dbService.js"]');
+        if (dbServiceScript) {
+            dbServiceScript.onerror = function() {
+                console.error('Failed to load dbService.js');
+                document.getElementById('loading').textContent = 
+                    'Failed to load database service. Check console for details.';
+            };
+        }
+    </script>
 </body>
 </html>
