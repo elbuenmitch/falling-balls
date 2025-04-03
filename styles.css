@@ -1,0 +1,89 @@
+body {
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #252525;
+    font-family: Arial, sans-serif;
+    color: #ffffff;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 5px;
+    background: #404040;
+    padding: 8px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+input[type="number"] {
+    padding: 4px;
+    width: 60px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#gameCanvas {
+    border: 2px solid #1a1a1a;
+    background-color: #404040;
+}
+
+#gameStatus {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    height: 24px;
+}
+
+.winner-label {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    user-select: none;
+    color: #ffff00;
+    text-shadow: 
+        -2px -2px 0 #000,
+        2px -2px 0 #000,
+        -2px 2px 0 #000,
+        2px 2px 0 #000;
+    animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+    from { transform: translate(-50%, -50%); }
+    to { transform: translate(-50%, -70%); }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "falling-balls-game",
+  "version": "1.0.0",
+  "description": "A physics-based game with Supabase database persistence",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.3",
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {}
+}
